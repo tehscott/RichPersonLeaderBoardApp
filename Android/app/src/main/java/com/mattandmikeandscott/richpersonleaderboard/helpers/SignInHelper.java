@@ -21,7 +21,6 @@ public class SignInHelper implements GoogleApiClient.OnConnectionFailedListener 
     private GoogleApiClient mGoogleApiClient;
     public static int RC_SIGN_IN = 1000;
 
-
     public SignInHelper(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
     }
@@ -35,20 +34,17 @@ public class SignInHelper implements GoogleApiClient.OnConnectionFailedListener 
                 .enableAutoManage(mainActivity, this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
-
-        mainActivity.findViewById(R.id.sign_in_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signIn();
-            }
-        });
     }
 
-    private void signIn() {
+    public void signIn() {
         if(getId() == null) {
             Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
             mainActivity.startActivityForResult(signInIntent, RC_SIGN_IN);
         }
+    }
+
+    public boolean isSignedIn() {
+        return getId() != null;
     }
 
     public void handleSignInResult(GoogleSignInResult result) {
@@ -64,6 +60,10 @@ public class SignInHelper implements GoogleApiClient.OnConnectionFailedListener 
     }
 
     public String getId() {
+        if(MainHelper.IS_DEBUG) {
+            return "115945239127508307789";
+        }
+
         SharedPreferences settings = mainActivity.getSharedPreferences(mainActivity.getString(R.string.app_short_name), Context.MODE_PRIVATE);
 
         return settings.getString("personId", null);

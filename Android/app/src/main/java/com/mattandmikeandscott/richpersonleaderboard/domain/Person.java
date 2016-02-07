@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import static com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType.*;
 
 public class Person {
-    private int id;
+    private String googleId;
     private String name;
     private int rank;
     private double wealth;
@@ -13,8 +13,8 @@ public class Person {
     private ArrayList<Payment> payments;
     private ArrayList<Achievement> achievements;
 
-    public Person(int personId, String name, int rank, double wealth, ArrayList<Rank> ranks, ArrayList<Payment> payments, ArrayList<Achievement> achievements) {
-        this.id = personId;
+    public Person(String googleId, String name, int rank, double wealth, ArrayList<Rank> ranks, ArrayList<Payment> payments, ArrayList<Achievement> achievements) {
+        this.googleId = googleId;
         this.name = name;
         this.rank = rank;
         this.wealth = wealth;
@@ -33,12 +33,12 @@ public class Person {
         return null;
     }
 
-    public int getId() {
-        return id;
+    public String getGoogleId() {
+        return googleId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
     }
 
     public String getName() {

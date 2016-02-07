@@ -16,6 +16,7 @@ import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mattandmikeandscott.richpersonleaderboard.MainActivity;
 import com.mattandmikeandscott.richpersonleaderboard.R;
 import com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType;
 import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
@@ -88,14 +89,18 @@ public class PersonListAdapter extends BaseAdapter {
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showPersonProfileDialog(currentPerson.getId());
+                if(((MainActivity) context).getSignInHelper().isSignedIn()) {
+                    showPersonProfileDialog(currentPerson.getGoogleId());
+                } else {
+                    ((MainActivity) context).getSignInHelper().signIn();
+                }
             }
         });
 
         return convertView;
     }
 
-    private void showPersonProfileDialog(final int personId) {
+    private void showPersonProfileDialog(final String googleId) {
         final Dialog dialog = new Dialog(context, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
         dialog.setCancelable(true);
 
@@ -119,8 +124,8 @@ public class PersonListAdapter extends BaseAdapter {
                     public void run() {
                         Repository repository = new Repository(context.getResources());
 
-                        Map<String, Integer> parameters = new Hashtable<>();
-                        parameters.put("id", personId);
+                        Map<String, String> parameters = new Hashtable<>();
+                        parameters.put("id", String.valueOf(googleId));
 
                         ArrayList<Person> person = repository.getPeople(PeopleQueryType.Person, parameters);
 

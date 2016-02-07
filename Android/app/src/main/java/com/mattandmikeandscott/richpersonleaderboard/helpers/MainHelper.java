@@ -1,13 +1,18 @@
 package com.mattandmikeandscott.richpersonleaderboard.helpers;
 
+import android.app.Dialog;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
+import android.util.Base64;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Toast;
+import android.widget.RelativeLayout;
 
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.mattandmikeandscott.richpersonleaderboard.MainActivity;
 import com.mattandmikeandscott.richpersonleaderboard.MainFragment;
 import com.mattandmikeandscott.richpersonleaderboard.R;
@@ -15,11 +20,16 @@ import com.mattandmikeandscott.richpersonleaderboard.adapters.SectionsPagerAdapt
 import com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType;
 import com.mattandmikeandscott.richpersonleaderboard.domain.RankType;
 
+import java.security.MessageDigest;
 import java.util.Hashtable;
 import java.util.Map;
 
 public class MainHelper {
     private MainActivity mainActivity;
+
+    private static final String UNSIGNED_SIGNATURE = "NaiuHKGQ8+GVtsbqXUKZ47XW2k4=";
+    private static final String SIGNED_SIGNATURE = "kao+M4xQqNos2r7KVuj5d2LHONk=";
+    public static boolean IS_DEBUG = false;
 
     public MainHelper(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
@@ -29,8 +39,22 @@ public class MainHelper {
         mainActivity.findViewById(R.id.find_me_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(mainActivity, "Searching with hard coded ID of 1", Toast.LENGTH_SHORT).show();
-                findMe();
+                if(mainActivity.getSignInHelper().isSignedIn()) {
+                    findMe();
+                } else {
+                    mainActivity.getSignInHelper().signIn();
+                }
+            }
+        });
+
+        mainActivity.findViewById(R.id.raise_rank_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mainActivity.getSignInHelper().isSignedIn()) {
+                    showBuyDialog(mainActivity.getSignInHelper().getId());
+                } else {
+                    mainActivity.getSignInHelper().signIn();
+                }
             }
         });
     }
@@ -56,9 +80,9 @@ public class MainHelper {
     }
 
     private void findMe() {
-        Map<String, Integer> parameters = new Hashtable<>();
-        parameters.put("id", Integer.valueOf(mainActivity.getSignInHelper().getId()));
-        parameters.put("range", 5);
+        Map<String, String> parameters = new Hashtable<>();
+        parameters.put("id", mainActivity.getSignInHelper().getId());
+        parameters.put("range", "5");
 
         int currentPosition = mainActivity.getViewPager().getCurrentItem();
         String tag = "";
@@ -102,5 +126,46 @@ public class MainHelper {
     private void hideActionBarTitle(ActionBar actionBar) {
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayShowHomeEnabled(false);
+    }
+
+    public void showBuyDialog(final String personId) {
+        final Dialog dialog = new Dialog(mainActivity, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
+        dialog.setCancelable(true);
+
+        LayoutInflater inflater = (LayoutInflater) mainActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.buy_dialog, null);
+
+        layout.findViewById(R.id.buy_dialog_back_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.setContentView(layout);
+        dialog.show();
+    }
+
+    public boolean isAppSigned() {
+        try {
+            PackageInfo packageInfo = mainActivity.getPackageManager().getPackageInfo(mainActivity.getPackageName(), PackageManager.GET_SIGNATURES);
+
+            for (Signature signature : packageInfo.signatures) {
+                MessageDigest md = MessageDigest.getInstance("SHA");
+                md.update(signature.toByteArray());
+                final String currentSignature = Base64.encodeToString(md.digest(), Base64.DEFAULT);
+                //Log.d("REMOVE_ME", "Include this string as a value for SIGNATURE:" + currentSignature);
+                //Log.d("REMOVE_ME", "Include this string as a value for SIGNATURE:" + SIGNED_SIGNATURE);
+                if (SIGNED_SIGNATURE.equals(currentSignature.trim())){
+                    //Log.d("REMOVE_ME", "It's signed eh");
+                    return true;
+                };
+            }
+        } catch (Exception e) {
+            //Log.d("REMOVE_ME", e.getMessage());
+        }
+
+        //Log.d("REMOVE_ME", "It's not signed eh");
+        return false;
     }
 }

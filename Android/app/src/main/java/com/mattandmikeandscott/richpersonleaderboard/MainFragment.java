@@ -71,10 +71,10 @@ public class MainFragment extends Fragment {
         ((RelativeLayout) listLayout).setTag(rankType.getName());
         container.setTag(rankType.getName());
 
-        Map<String, Integer> parameters = new Hashtable<>();
-        parameters.put("offset", 0);
-        parameters.put("perpage", 100);
-        parameters.put("ranktype", rankType.getValue());
+        Map<String, String> parameters = new Hashtable<>();
+        parameters.put("offset", "0");
+        parameters.put("perpage", "100");
+        parameters.put("ranktype", String.valueOf(rankType.getValue()));
 
         refreshListAsync(getResources(), (MainActivity) getActivity(), listLayout, PeopleQueryType.Persons, rankType, parameters);
         setupSwipeLayout(listLayout, PeopleQueryType.Persons, rankType, parameters);
@@ -82,7 +82,7 @@ public class MainFragment extends Fragment {
         return listLayout;
     }
 
-    private void setupSwipeLayout(final View listLayout, final PeopleQueryType queryType, final RankType rankType, final Map<String, Integer> parameters) {
+    private void setupSwipeLayout(final View listLayout, final PeopleQueryType queryType, final RankType rankType, final Map<String, String> parameters) {
         final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) listLayout.findViewById(R.id.list_container);
         swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -92,7 +92,7 @@ public class MainFragment extends Fragment {
         });
     }
 
-    public static void refreshListAsync(final Resources resources, final MainActivity activity, final View listLayout, final PeopleQueryType queryType, final RankType rankType, final Map<String, Integer> parameters) {
+    public static void refreshListAsync(final Resources resources, final MainActivity activity, final View listLayout, final PeopleQueryType queryType, final RankType rankType, final Map<String, String> parameters) {
         final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) listLayout.findViewById(R.id.list_container);
         swipeLayout.setRefreshing(true);
         swipeLayout.setEnabled(false);

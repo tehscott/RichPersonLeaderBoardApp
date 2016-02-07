@@ -9,6 +9,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
@@ -33,6 +34,12 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
 
         mainHelper = new MainHelper(this);
         signInHelper = new SignInHelper(this);
+
+        MainHelper.IS_DEBUG = !mainHelper.isAppSigned();
+
+        if(MainHelper.IS_DEBUG) {
+            Toast.makeText(MainActivity.this, "Running in debug mode.", Toast.LENGTH_LONG).show();
+        }
 
         mainHelper.setupActionBar();
         mainHelper.setupButtons();

@@ -40,9 +40,9 @@ public class Repository {
         this.resources = resources;
     }
 
-    public ArrayList<Person> getPeople(PeopleQueryType peopleQueryType, Map<String, Integer> parameters) {
+    public ArrayList<Person> getPeople(PeopleQueryType peopleQueryType, Map<String, String> parameters) {
         if(peopleQueryType == PeopleQueryType.Persons) {
-            endpoint += "/api/persons";
+                endpoint += "/api/persons";
         } else if(peopleQueryType == PeopleQueryType.Myself) {
             endpoint += "/api/GetPersonAndSurroundingPeople";
         } else if(peopleQueryType == PeopleQueryType.Person) {
@@ -96,7 +96,7 @@ public class Repository {
                     }
                 }
 
-                people.add(new Person(jsonObject.getInt("PersonId"), jsonObject.getString("Name"), jsonObject.getInt("Rank"), jsonObject.getDouble("Wealth"), rankings, payments, achievements));
+                people.add(new Person(jsonObject.getString("GoogleId"), jsonObject.getString("Name"), jsonObject.getInt("Rank"), jsonObject.getDouble("Wealth"), rankings, payments, achievements));
             }
         } catch(JSONException e) {
             Log.e(resources.getString(R.string.app_short_name), "Error parsing JSON data " + e.toString());
@@ -180,7 +180,7 @@ public class Repository {
         return jArray;
     }
 
-    private String paramListToString(Map<String, Integer> parameters) {
+    private String paramListToString(Map<String, String> parameters) {
         String listAsString = "";
 
         for(String parameter : parameters.keySet()) {
