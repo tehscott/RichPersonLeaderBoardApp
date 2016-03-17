@@ -1,8 +1,12 @@
 package com.mattandmikeandscott.richpersonleaderboard;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
@@ -11,21 +15,41 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.widget.Toast;
 
+import com.android.vending.billing.IInAppBillingService;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.mattandmikeandscott.richpersonleaderboard.adapters.PersonListAdapter;
 import com.mattandmikeandscott.richpersonleaderboard.adapters.SectionsPagerAdapter;
+import com.mattandmikeandscott.richpersonleaderboard.domain.Constants;
 import com.mattandmikeandscott.richpersonleaderboard.domain.GetPeopleResponse;
 import com.mattandmikeandscott.richpersonleaderboard.domain.MainActivityHandlerResult;
+import com.mattandmikeandscott.richpersonleaderboard.helpers.InAppPurchaseHelper;
 import com.mattandmikeandscott.richpersonleaderboard.helpers.MainHelper;
 import com.mattandmikeandscott.richpersonleaderboard.helpers.SignInHelper;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private MainHelper mainHelper;
+    private InAppPurchaseHelper mInAppPurchaseHelper;
 
     private SignInHelper signInHelper;
     private ViewPager mViewPager;
+
+    private IInAppBillingService mBillingService;
+    public ServiceConnection mServiceConn = new ServiceConnection() {
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mBillingService = null;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mBillingService = IInAppBillingService.Stub.asInterface(service);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +58,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
 
         mainHelper = new MainHelper(this);
         signInHelper = new SignInHelper(this);
+        mInAppPurchaseHelper = new InAppPurchaseHelper(this);
 
         MainHelper.IS_DEBUG = !mainHelper.isAppSigned();
 
@@ -46,6 +71,8 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         mainHelper.setupViewPager();
 
         signInHelper.setupSignIn();
+
+        mInAppPurchaseHelper.initService();
     }
 
     @Override
@@ -55,6 +82,38 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         if (requestCode == SignInHelper.RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             signInHelper.handleSignInResult(result);
+        } else if(requestCode == Constants.ACTIVITY_RESULT_PURCHASE) {
+            int responseCode = data.getIntExtra("RESPONSE_CODE", 0);
+            String purchaseData = data.getStringExtra("INAPP_PURCHASE_DATA");
+            String dataSignature = data.getStringExtra("INAPP_DATA_SIGNATURE");
+
+            if (resultCode == RESULT_OK) {
+                try {
+                    JSONObject jo = new JSONObject(purchaseData);
+                    String productId = jo.getString(Constants.PURCHASE_ONE_PACKAGE_NAME);
+
+                    boolean isPro = productId != null && !productId.isEmpty();
+
+                    SharedPreferences sharedPrefs = getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPrefs.edit();
+                    editor.putBoolean("isPro", isPro);
+                    editor.apply();
+                    //alert("You have bought the " + sku + ". Excellent choice, adventurer!");
+                } catch (JSONException e) {
+                    //alert("Failed to parse purchase data.");
+                    e.printStackTrace();
+                }
+            }
+        } else if(resultCode == Constants.ACTIVITY_RESULT_PURCHASE_DEBUG) {
+            //TODO
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mBillingService != null) {
+            unbindService(mServiceConn);
         }
     }
 
