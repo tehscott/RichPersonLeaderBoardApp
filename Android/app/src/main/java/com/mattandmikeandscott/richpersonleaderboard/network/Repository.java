@@ -34,26 +34,46 @@ import java.util.Map;
 
 public class Repository {
     private Resources resources;
-    private String endpoint = "http://richpersonleaderboardserver.azurewebsites.net";
+    private final String endpoint = "http://richpersonleaderboardserver.azurewebsites.net";
+    //private final String endpoint = "http://10.0.2.2/Server";
+    //private final String endpoint = "http://10.0.0.7/Server";
 
     public Repository(Resources resources) {
         this.resources = resources;
     }
 
+    public JSONArray recordPurchase(ArrayList<NameValuePair> parameters) {
+        String recordPurchaseEndpoint = endpoint + "/api/RecordPurchase";
+
+        return doPostRequest(recordPurchaseEndpoint, parameters);
+    }
+
+    public void signIn(final ArrayList<NameValuePair> parameters) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String createPersonEndpoint = endpoint + "/api/Person";
+                doPostRequest(createPersonEndpoint, parameters);
+            }
+        }).start();
+    }
+
     public ArrayList<Person> getPeople(PeopleQueryType peopleQueryType, Map<String, String> parameters) {
+        String getPeopleEndpoint = endpoint;
+
         if(peopleQueryType == PeopleQueryType.Persons) {
-                endpoint += "/api/persons";
+            getPeopleEndpoint += "/api/persons";
         } else if(peopleQueryType == PeopleQueryType.Myself) {
-            endpoint += "/api/GetPersonAndSurroundingPeople";
+            getPeopleEndpoint += "/api/GetPersonAndSurroundingPeople";
         } else if(peopleQueryType == PeopleQueryType.Person) {
-            endpoint += "/api/person";
+            getPeopleEndpoint += "/api/person";
         } else {
             throw new IllegalArgumentException("Invalid endpoint for getPeople()!");
         }
 
         ArrayList<Person> people = new ArrayList<>();
 
-        JSONArray peopleData = doGetRequest(endpoint, paramListToString(parameters));
+        JSONArray peopleData = doGetRequest(getPeopleEndpoint, paramListToString(parameters));
 
         try {
             for(int i = 0; i < peopleData.length(); i++) {
@@ -152,7 +172,8 @@ public class Repository {
                 String line = null;
 
                 while ((line = reader.readLine()) != null) {
-                    sb.append(line + "\n");
+                    //sb.append(line + "\n");
+                    sb.append(line);
                 }
 
                 is.close();
@@ -168,7 +189,7 @@ public class Repository {
                 Log.e(resources.getString(R.string.app_short_name), "Error parsing JSON data " + e.toString());
             }
         } catch(Exception e) {
-
+            Log.e(resources.getString(R.string.app_short_name), "Error: " + e.toString());
         } finally {
             try {
                 client.close();

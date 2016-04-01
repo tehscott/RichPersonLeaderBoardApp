@@ -8,19 +8,27 @@ import android.content.pm.Signature;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.mattandmikeandscott.richpersonleaderboard.MainActivity;
 import com.mattandmikeandscott.richpersonleaderboard.MainFragment;
 import com.mattandmikeandscott.richpersonleaderboard.R;
 import com.mattandmikeandscott.richpersonleaderboard.adapters.SectionsPagerAdapter;
+import com.mattandmikeandscott.richpersonleaderboard.domain.Constants;
 import com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType;
 import com.mattandmikeandscott.richpersonleaderboard.domain.RankType;
+import com.mattandmikeandscott.richpersonleaderboard.network.Repository;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
 
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -40,7 +48,29 @@ public class MainHelper {
             @Override
             public void onClick(View v) {
                 if(mainActivity.getSignInHelper().isSignedIn()) {
-                    findMe();
+                    //findMe();
+
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Repository repo = new Repository(mainActivity.getResources());
+
+                            ArrayList<NameValuePair> params = new ArrayList<>();
+                            params.add(new BasicNameValuePair("RESPONSE_CODE", "0"));
+                            params.add(new BasicNameValuePair("INAPP_PURCHASE_DATA", "{\"orderId\":\"GPA.1300-2936-1155-52109\",\"packageName\":\"com.mattandmikeandscott.richpersonleaderboard\",\"productId\":\"com.mattandmikeandscott.richpersonleaderboard.purchaseone\",\"purchaseTime\":1459135485760,\"purchaseState\":0,\"developerPayload\":\"{'googleId': '108548037662688301318'}\",\"purchaseToken\":\"nghdfnifojifhnijpecknkeo.AO-J1Ozi56BN8xfKJABer8OsFwxurDK6TApP5bhKzrkAinOUOV2Nuv5yYm5nByn4YkdzqyQPyGzfmFRcXIJ3dHXij3CsCRS_koicXQn8oIGpqgMmxSRtUFzKVBcoHzbYvMDDstUvFFCOzZGTHBTSaXwhKywjLS2aFIDyl2oHsNrg9NRC5oiMI2gB_63nkYZWnkmwxuG6wp6ILwpOG2QltbD0SO_YnEu6aA\"}"));
+                            params.add(new BasicNameValuePair("INAPP_DATA_SIGNATURE", "bko5q5OFWd/KRF3nCUKDl3PSwR79OD7uwNBf5BQ/CDN+0tR0/G3FsmdEHD7zbkndb492mL4lfh50app7jOPyMEvT42uaElzVpoHhN7s57odzsF1zuMV0knoNVoWadfOkDtvAvKNpa4Cw+EqqOWYC5JzLahR8LsT4X6nWOHlM7ZGrTDw+gqLElZ0K6NRuv3Ro9qXj4RV568WXPJl5VIlw3l529vUPoLnRwrvLxkm1nG5IV/bK1MOu1hsvSJpt++XwnjfmLSJEi8Hrg3nRutvOgtLgzb7rbhXM25O6Wxcsq9RTW1MNCpt2+KwxM//EXVjFXrHkBjpvolKvUXRGmmQ8ow=="));
+
+                            final JSONArray results = repo.recordPurchase(params);
+
+                            mainActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(mainActivity, results.toString(), Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                    }).start();
+
                 } else {
                     mainActivity.getSignInHelper().signIn();
                 }
@@ -134,6 +164,18 @@ public class MainHelper {
 
         LayoutInflater inflater = (LayoutInflater) mainActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         final RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.buy_dialog, null);
+
+        final Spinner spinner = (Spinner) layout.findViewById(R.id.purchaseTypeSpinner);
+
+        layout.findViewById(R.id.purchase_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String purchasePackageName = Constants.PURCHASE_PACKAGE_NAMES[spinner.getSelectedItemPosition()];
+                mainActivity.getInAppPurchaseHelper().buyMoney(mainActivity.getBillingService(), dialog, purchasePackageName);
+
+                dialog.dismiss();
+            }
+        });
 
         layout.findViewById(R.id.buy_dialog_back_button).setOnClickListener(new View.OnClickListener() {
             @Override

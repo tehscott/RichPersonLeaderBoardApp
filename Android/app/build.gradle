@@ -2,31 +2,39 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 android {
+    signingConfigs {
+        release_signed {
+            keyAlias 'richpersonleaderboard'
+            keyPassword '!QAZ2wsx'
+            storeFile file('C:/Dev/Git/RichPersonLeaderBoardApp/Android/keystore.jks')
+            storePassword '!QAZ2wsx'
+        }
+    }
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
-
     defaultConfig {
         applicationId "com.mattandmikeandscott.richpersonleaderboard"
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 1101
         versionName "1.1.0.1"
+        signingConfig signingConfigs.release_signed
     }
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
     useLibrary 'org.apache.http.legacy'
-
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/NOTICE'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
+    }
+    productFlavors {
     }
 }
 
@@ -36,4 +44,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'org.apache.httpcomponents:httpclient-android:4.3.5.1'
     compile 'com.google.android.gms:play-services:8.3.0'
+    compile 'com.google.code.gson:gson:2.6.2'
 }

@@ -3,6 +3,8 @@ package com.mattandmikeandscott.richpersonleaderboard.helpers;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -15,6 +17,14 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.mattandmikeandscott.richpersonleaderboard.MainActivity;
 import com.mattandmikeandscott.richpersonleaderboard.R;
+import com.mattandmikeandscott.richpersonleaderboard.domain.InAppPurchase;
+import com.mattandmikeandscott.richpersonleaderboard.domain.MainActivityHandlerResult;
+import com.mattandmikeandscott.richpersonleaderboard.network.Repository;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+
+import java.util.ArrayList;
 
 public class SignInHelper implements GoogleApiClient.OnConnectionFailedListener {
     private MainActivity mainActivity;
@@ -40,6 +50,8 @@ public class SignInHelper implements GoogleApiClient.OnConnectionFailedListener 
         if(getId() == null) {
             Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
             mainActivity.startActivityForResult(signInIntent, RC_SIGN_IN);
+        } else {
+            mainActivity.handler.sendEmptyMessage(MainActivityHandlerResult.SIGNED_IN.ordinal());
         }
     }
 
@@ -52,6 +64,13 @@ public class SignInHelper implements GoogleApiClient.OnConnectionFailedListener 
         if (result.isSuccess()) {
             GoogleSignInAccount acct = result.getSignInAccount();
             setId(acct.getId());
+
+            ArrayList<NameValuePair> params = new ArrayList<>();
+            params.add(new BasicNameValuePair("Name", acct.getEmail()));
+            params.add(new BasicNameValuePair("GoogleId", acct.getId()));
+            mainActivity.getRepository().signIn(params);
+
+            mainActivity.handler.sendEmptyMessage(MainActivityHandlerResult.SIGNED_IN.ordinal());
 
             Toast.makeText(mainActivity, "Signed in!", Toast.LENGTH_SHORT).show();
         } else {
